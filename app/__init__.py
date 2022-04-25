@@ -4,8 +4,9 @@ def create_app():
     # __name__ stores the name of the module we're in
     app = Flask(__name__)
 
-    from .routes.routes import bp
+    from .routes import cat_routes, dog_routes
 
-    app.register_blueprint(bp)
+    app.register_blueprint(cat_routes.bp)
+    app.register_blueprint(dog_routes.bp)
 
     return app

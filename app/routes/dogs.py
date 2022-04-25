@@ -25,3 +25,23 @@ def get_all_dogs():
         })
     return jsonify(dog_response)
 
+@dogs_bp.route('/<dog_id>', methods=['GET'])
+def get_one_dog(dog_id):
+    try:
+        dog_id = int(dog_id)
+    except ValueError:
+        return {"msg": "Invalid dog id"}, 400
+
+    chosen_dog = None
+    for dog in dogs:
+        if dog.id == dog_id:
+            chosen_dog = dog
+            break
+    if chosen_dog is None:
+        return {"msg": f"Could not find dog with id {dog_id}"}, 404
+    return {
+            'id': chosen_dog.id,
+            'name': chosen_dog.name, 
+            'age': chosen_dog.age
+        }, 200
+

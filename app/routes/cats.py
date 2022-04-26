@@ -26,3 +26,27 @@ def get_all_cats():
             'color': cat.color
         })
     return jsonify(cat_response)
+
+
+@cats_bp.route('/<cat_id>', methods=['GET'])
+def get_one_cat(cat_id):
+    try:
+        cat_id = int(cat_id)
+    except ValueError:
+        rsp = {"msg": f"Invalid id: {cat_id}"}
+        return jsonify(rsp), 400
+    chosen_cat = None
+    for cat in cats:
+        if cat.id == cat_id:
+            chosen_cat = cat
+            break
+    if chosen_cat is None:
+        rsp = {"msg": f"Could not find cat with id {cat_id}"}
+        return jsonify(rsp), 404
+    rsp = {
+        'id': chosen_cat.id,
+        'name': chosen_cat.name,
+        'age': chosen_cat.age,
+        'color': chosen_cat.color
+    }
+    return jsonify(rsp), 200

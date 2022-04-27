@@ -29,3 +29,26 @@ def get_all_cars():
         )
     return jsonify(response)
 
+@cars_bp.route("/<car_id>", methods=["GET"])
+def get_one_car(car_id):
+    try:
+        car_id = int(car_id)
+    except ValueError:
+        return jsonify({'msg': f"Invalid car id: '{car_id}'. ID must be an integer"}), 400
+
+    chosen_car = None
+    for car in cars:
+        if car.id == car_id:
+            chosen_car = {
+                "id": car.id,
+                "driver": car.driver,
+                "team": car.team,
+                "mass_kg": car.mass_kg
+            }
+
+    if chosen_car is None:
+        return jsonify({'msg': f'Could not find car with id {car_id}'}), 404
+
+    return jsonify(chosen_car)
+    
+

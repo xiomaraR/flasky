@@ -1,53 +1,53 @@
 from flask import Blueprint, jsonify, abort, make_response
-
-class Dog:
-    def __init__(self, id, name, breed, chip):
-        self.id = id
-        self.name = name
-        self.breed = breed
-        self.chip = chip
-
-    def to_dict(self):
-        return dict(
-            id=self.id,
-            name=self.name,
-            breed=self.breed,
-            chip=self.chip,
-        )
-
-dogs = [
-    Dog(1, "Fido", "shiba inu", "36wkj6w5jh56j"),
-    Dog(2, "Luna", "corgi", "36wkj6w5jh56j"),
-    Dog(3, "Kuro", "husky","36wkj6w5jh56j"),
-    Dog(4, "Max", "lab","36wkj6w5jh56j")
-]
+from ..models.dog import Dog
+from app import db
 
 bp = Blueprint("dogs", __name__, url_prefix="/dogs")
+
+# See cat.py for more about why this method is here
+def make_dog_safe(data_dict):
+    try:
+        return Dog.from_dict(data_dict)
+    except KeyError as e:
+        abort(make_response(jsonify(dict(details=f"missing required field: {e}")), 400))
+
+# POST /dogs
+@bp.route("", methods=("POST",))
+def create_dog():
+    request_body = request.get_json()
+    dog = make_dog_safe(request_body)
+
+    db.session.add(dog)
+    db.session.commit()
+
+    return jsonify(dog.to_dict()), 201
 
 # GET /dogs
 
 @bp.route("", methods=("GET",))
 def index_dogs():
+    dogs = Dog.query.all()
+
     result_list = [dog.to_dict() for dog in dogs]
 
     return jsonify(result_list)
 
-def validate_dog(id):
-    try:
-        id = int(id)
-    except ValueError:
-        abort(make_response(jsonify(dict(details=f"invalid id: {id}")), 400))
+# def validate_dog(id):
+#     try:
+#         id = int(id)
+#     except ValueError:
+#         abort(make_response(jsonify(dict(details=f"invalid id: {id}")), 400))
 
-    for dog in dogs:
-        if dog.id == id:
-            # return the dog
-            return dog
+#     for dog in dogs:
+#         if dog.id == id:
+#             # return the dog
+#             return dog
 
-    # no dog found
-    abort(make_response(jsonify(dict(details=f"dog id {id} not found")), 404))    
+#     # no dog found
+#     abort(make_response(jsonify(dict(details=f"dog id {id} not found")), 404))    
 
-# GET /dogs/id
-@bp.route("/<id>", methods=("GET",))
-def get_dog(id):
-    dog = validate_dog(id)
-    return jsonify(dog.to_dict())
+# # GET /dogs/id
+# @bp.route("/<id>", methods=("GET",))
+# def get_dog(id):
+#     dog = validate_dog(id)
+#     return jsonify(dog.to_dict())

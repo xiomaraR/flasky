@@ -2,39 +2,26 @@ from flask import Blueprint, jsonify, abort, make_response, request
 from ..models.cat import Cat
 from app import db
 
-# class Cat:
-#     def __init__(self, id, name, color, personality):
-#         self.id = id
-#         self.name = name
-#         self.color = color
-#         self.personality = personality
-
-#     def to_dict(self):
-#         return dict(
-#             id=self.id,
-#             name=self.name,
-#             color=self.color,
-#             personality=self.personality,
-#         )
-
-# cats = [
-#     Cat(1, "Muna", "black", "mischevious"),
-#     Cat(2, "Matthew", "spotted", "cuddly"),
-#     Cat(3, "George", "Gray","Sassy")
-# ]
-
 bp = Blueprint("cats", __name__, url_prefix="/cats")
+
+# helper method to turn key errors into a nice error message
+# Cat.from_dict is what "knows" that it needs certain keys from
+# a dictionary, but it doesn't "know" anything about Flask routes and error
+# handling. So we put the responsibility that Cat should know about in a
+# function in Cat, but leave the stuff that Flask should know about here.
+# Further refactors are possible!
+
+def make_cat_safe(data_dict):
+    try:
+        return Cat.from_dict(data_dict)
+    except KeyError as e:
+        abort(make_response(jsonify(dict(details=f"missing required field: {e}")), 400))
 
 # POST /cats
 @bp.route("", methods=("POST",))
 def create_cat():
     request_body = request.get_json()
-
-    cat = Cat(
-        name=request_body["name"],
-        color=request_body["color"],
-        personality=request_body["personality"],
-        )
+    cat = make_cat_safe(request_body)
 
     db.session.add(cat)
     db.session.commit()

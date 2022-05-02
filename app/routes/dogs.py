@@ -1,7 +1,21 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, make_response, abort
 
 from app import db
 from app.models.dogs import Dog
+
+def get_dog_or_abort(dog_id):
+    try:
+        dog_id = int(dog_id)
+    except ValueError:
+        return abort(make_response({"msg": "Invalid dog id!"}, 400))
+
+    dog = Dog.query.get(dog_id)
+
+    if dog is None:
+        return abort(make_response({"msg": f"Could not find dog with id {dog_id}!"}, 404))
+    
+    return dog
+
 
 dogs_bp = Blueprint('dogs_bp', __name__, url_prefix='/dogs')
 
@@ -32,24 +46,41 @@ def create_one_dog():
         "msg": f'Successfully created dog with id: {new_dog.id}'
         }, 201
 
-# To be fixed to use the Dog model in the following livecode
-# @dogs_bp.route('/<dog_id>', methods=['GET'])
-# def get_one_dog(dog_id):
-#     try:
-#         dog_id = int(dog_id)
-#     except ValueError:
-#         return {"msg": "Invalid dog id"}, 400
+@dogs_bp.route('/<dog_id>', methods=['GET'])
+def get_one_dog(dog_id):
+    dog = get_dog_or_abort(dog_id)
+    return {
+            'id': dog.id,
+            'name': dog.name, 
+            'age': dog.age
+        }, 200
 
-#     chosen_dog = None
-#     for dog in dogs:
-#         if dog.id == dog_id:
-#             chosen_dog = dog
-#             break
-#     if chosen_dog is None:
-#         return {"msg": f"Could not find dog with id {dog_id}"}, 404
-#     return {
-#             'id': chosen_dog.id,
-#             'name': chosen_dog.name, 
-#             'age': chosen_dog.age
-#         }, 200
 
+@dogs_bp.route('/<dog_id>', methods=['PUT'])
+def update_one_dog(dog_id):
+    request_body = request.get_json()
+    if "name" not in request_body or \
+       "age" not in request_body:
+        return {"msg": "Request must include name and age"}, 400
+
+    dog = get_dog_or_abort(dog_id)
+
+    dog.name = request_body["name"]
+    dog.age = request_body["age"]
+
+    db.session.commit()
+    
+    return {
+            'id': dog.id,
+            'name': dog.name, 
+            'age': dog.age
+        }, 200
+
+@dogs_bp.route('/<dog_id>', methods=['DELETE'])
+def delete_one_dog(dog_id):
+    dog = get_dog_or_abort(dog_id)
+
+    db.session.delete(dog)
+    db.session.commit() 
+
+    return {"msg": f"Doggo with id {dog_id} deleted"}, 200

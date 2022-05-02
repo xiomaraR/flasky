@@ -21,7 +21,11 @@ dogs_bp = Blueprint('dogs_bp', __name__, url_prefix='/dogs')
 
 @dogs_bp.route('', methods=['GET'])
 def get_all_dogs():
-    dogs = Dog.query.all()
+    name_query = request.args.get("name")
+    if name_query is not None:
+        dogs = Dog.query.filter_by(name=name_query)
+    else:
+        dogs = Dog.query.all()
     dog_response = []
     for dog in dogs:
         dog_response.append({

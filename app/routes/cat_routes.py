@@ -38,14 +38,37 @@ def validate_cat(id):
     except:
         return abort(make_response({"message": f"cat {id} is invalid"}, 400))
 
-    for cat in cats:
-        if cat.id == id:
-            return cat
+    cat = Cat.query.get(id)
 
-    return abort(make_response({"message":f"cat {id} not found"}, 404))
+    if not cat:
+        abort(make_response({"message":f"cat {id} not found"}, 404))
+    
+    return cat
 
 # GET one cat
 @cat_bp.route("/<id>", methods = ["GET"])
 def read_one_cat(id):
     cat = validate_cat(id)
     return jsonify(cat.to_json()), 200
+
+@cat_bp.route("/<id>", methods = ["PUT"])
+def update_one_cat(id):
+    cat = validate_cat(id)
+    request_body = request.get_json()
+
+    cat.name = request_body["name"]
+    cat.personality = request_body["personality"]
+    cat.breed = request_body["breed"]
+    cat.age = request_body["age"]
+    cat.toe_beans = request_body["toe_beans"] 
+
+    db.session.commit()
+    return make_response(f"Cat #{cat.id} successfully updated"), 200
+
+@cat_bp.route("/<id>", methods = ["DELETE"])
+def delete_one_cat(id):
+    cat = validate_cat(id)
+    db.session.delete(cat)
+    db.session.commit()
+
+    return make_response(f"Cat #{cat.id} successfully deleted"), 200

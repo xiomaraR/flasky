@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, make_response, abort, request
 from app.models.cat import Cat
 from app import db
+from .helpers import validate_cat
 
 cat_bp = Blueprint("cat", __name__, url_prefix="/cats")
 
@@ -9,12 +10,7 @@ cat_bp = Blueprint("cat", __name__, url_prefix="/cats")
 def create_cat():
     request_body = request.get_json()
 
-    new_cat = Cat(
-        name=request_body['name'],
-        personality=request_body['personality'],
-        age=request_body['age'],
-        breed=request_body['breed']
-    )
+    new_cat = Cat.create(request_body)
 
     db.session.add(new_cat)
     db.session.commit()
@@ -25,25 +21,22 @@ def create_cat():
 # GET ALL
 @cat_bp.route("", methods=["GET"])
 def read_all_cats():
+    breed_query = request.args.get("breed")
+    personality_query = request.args.get("personality")
+
+    if breed_query:
+        cats = Cat.query.filter_by(breed=breed_query)
+    elif personality_query:
+        cats = Cat.query.filter_by(personality=personality_query)
+    else:
+        cats = Cat.query.all()
+
     cats_response = []
-    cats = Cat.query.all()
     for cat in cats:
         cats_response.append(cat.to_json())
 
     return jsonify(cats_response), 200
 
-def validate_cat(id):
-    try:
-        id = int(id)
-    except:
-        return abort(make_response({"message": f"cat {id} is invalid"}, 400))
-
-    cat = Cat.query.get(id)
-
-    if not cat:
-        abort(make_response({"message":f"cat {id} not found"}, 404))
-    
-    return cat
 
 # GET one cat
 @cat_bp.route("/<id>", methods = ["GET"])
@@ -56,11 +49,7 @@ def update_one_cat(id):
     cat = validate_cat(id)
     request_body = request.get_json()
 
-    cat.name = request_body["name"]
-    cat.personality = request_body["personality"]
-    cat.breed = request_body["breed"]
-    cat.age = request_body["age"]
-    cat.toe_beans = request_body["toe_beans"] 
+    cat.update(request_body)
 
     db.session.commit()
     return make_response(f"Cat #{cat.id} successfully updated"), 200

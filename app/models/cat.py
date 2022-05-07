@@ -17,3 +17,20 @@ class Cat(db.Model):
             "age": self.age,
             "toe_beans": self.toe_beans
         }
+
+  def update(self, req_body):
+    self.name = req_body["name"]
+    self.personality =  req_body["personality"]
+    self.breed = req_body["breed"]
+    self.age = req_body["age"]
+    self.toe_beans = req_body["toe_beans"]
+
+  @classmethod
+  def create(cls, req_body):
+    new_cat = cls(
+        name=req_body['name'],
+        personality=req_body['personality'],
+        age=req_body['age'],
+        breed=req_body['breed']
+      )
+    return new_cat

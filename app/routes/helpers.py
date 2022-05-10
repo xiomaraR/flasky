@@ -1,3 +1,6 @@
+from flask import make_response, abort
+from app.models.cat import Cat
+
 def validate_cat(id):
     try:
         id = int(id)

@@ -7,6 +7,8 @@ class Cat(db.Model):
   breed = db.Column(db.String)
   age = db.Column(db.Integer)
   toe_beans = db.Column(db.Integer, default=16)
+  caretaker_id = db.Column(db.Integer, db.ForeignKey('caretaker.id'))
+  caretaker = db.relationship("Caretaker", back_populates="cats")
 
   def to_json(self):
         return {

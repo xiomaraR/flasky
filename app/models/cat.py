@@ -11,15 +11,19 @@ class Cat(db.Model):
   caretaker = db.relationship("Caretaker", back_populates="cats")
 
   def to_json(self):
-        return {
+    cat_dict = { 
             "id": self.id,
             "name": self.name,
             "personality": self.personality,
             "breed": self.breed,
             "age": self.age,
-            "toe_beans": self.toe_beans,
-            "caretaker": self.caretaker.name
-        }
+            "toe_beans": self.toe_beans
+            }
+
+    if self.caretaker:
+      cat_dict["caretaker_name"] = self.caretaker.name
+
+    return cat_dict
   
   def update(self,req_body):
     self.name = req_body["name"]

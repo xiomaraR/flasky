@@ -17,7 +17,8 @@ class Cat(db.Model):
             "personality": self.personality,
             "breed": self.breed,
             "age": self.age,
-            "toe_beans": self.toe_beans
+            "toe_beans": self.toe_beans,
+            "caretaker": self.caretaker.name
         }
   
   def update(self,req_body):
